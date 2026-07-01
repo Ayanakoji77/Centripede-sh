@@ -1,4 +1,3 @@
-// builtins.rs
 use crate::exec::ShellState;
 use std::env;
 use std::path::Path;
