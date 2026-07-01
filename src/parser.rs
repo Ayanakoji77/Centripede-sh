@@ -33,7 +33,7 @@ pub struct Job {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct JobQueue(Vec<Job>);
+pub struct JobQueue(pub Vec<Job>);
 
 pub fn parse(token_vec: Vec<Token>) -> Result<JobQueue, ParseError> {
     let mut job_queue = JobQueue(Vec::new());
@@ -127,11 +127,8 @@ pub fn parse(token_vec: Vec<Token>) -> Result<JobQueue, ParseError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    // Assuming your lexer is accessible like this. Adjust if your imports are different.
     use crate::lexer::{Token, WordPart};
 
-    // --- Test Helpers ---
-    // These make writing tests MUCH cleaner by quickly generating Word tokens.
     fn wp(s: &str) -> Vec<WordPart> {
         vec![WordPart::Word(s.to_string())]
     }
@@ -139,8 +136,6 @@ mod tests {
     fn w(s: &str) -> Token {
         Token::Word(wp(s))
     }
-
-    // --- Normal Cases ---
 
     #[test]
     fn test_simple_command() {
@@ -161,7 +156,6 @@ mod tests {
 
     #[test]
     fn test_pipeline() {
-        // ls | wc
         let tokens = vec![w("ls"), Token::Pipe, w("wc")];
         let expected = JobQueue(vec![Job {
             work_operator: Operator::None,
@@ -187,7 +181,6 @@ mod tests {
 
     #[test]
     fn test_redirections() {
-        // cat < in.txt > out.txt
         let tokens = vec![
             w("cat"),
             Token::RedirectIn,
@@ -211,7 +204,6 @@ mod tests {
 
     #[test]
     fn test_append_redirection() {
-        // echo a >> log.txt
         let tokens = vec![w("echo"), w("a"), Token::RedirectAppend, w("log.txt")];
         let expected = JobQueue(vec![Job {
             work_operator: Operator::None,
@@ -229,7 +221,6 @@ mod tests {
 
     #[test]
     fn test_logical_chaining() {
-        // make || echo "failed" && exit
         let tokens = vec![
             w("make"),
             Token::Or,
@@ -276,32 +267,26 @@ mod tests {
         assert_eq!(parse(tokens), Ok(expected));
     }
 
-    // --- Error / Edge Cases ---
-
     #[test]
     fn test_missing_filename_output() {
-        // ls >
         let tokens = vec![w("ls"), Token::RedirectOut];
         assert_eq!(parse(tokens), Err(ParseError::FilenameError));
     }
 
     #[test]
     fn test_missing_filename_input() {
-        // cat <
         let tokens = vec![w("cat"), Token::RedirectIn];
         assert_eq!(parse(tokens), Err(ParseError::FilenameError));
     }
 
     #[test]
     fn test_invalid_redirect_target() {
-        // ls > |
         let tokens = vec![w("ls"), Token::RedirectOut, Token::Pipe];
         assert_eq!(parse(tokens), Err(ParseError::FilenameError));
     }
 
     #[test]
     fn test_double_pipe() {
-        // ls | | wc
         let tokens = vec![w("ls"), Token::Pipe, Token::Pipe, w("wc")];
         assert_eq!(
             parse(tokens),
@@ -311,7 +296,6 @@ mod tests {
 
     #[test]
     fn test_leading_pipe() {
-        // | ls
         let tokens = vec![Token::Pipe, w("ls")];
         assert_eq!(
             parse(tokens),
@@ -321,7 +305,6 @@ mod tests {
 
     #[test]
     fn test_leading_logic_operator() {
-        // && ls
         let tokens = vec![Token::And, w("ls")];
         assert_eq!(
             parse(tokens),
