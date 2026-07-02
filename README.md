@@ -1,4 +1,4 @@
-# minish
+# Centipede-sh
 
 `minish` is a lightweight, custom Unix shell written in pure Rust using
 only the standard library (`std`). It is designed to act as the process
